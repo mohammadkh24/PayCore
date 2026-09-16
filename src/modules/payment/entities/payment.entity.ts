@@ -10,7 +10,7 @@ import { PaymentStatus } from '../enums/payment-status.enum';
 
 @Entity(entityName.Payment)
 export class Payment {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn("uuid")
   id: number;
 
   @Column()
