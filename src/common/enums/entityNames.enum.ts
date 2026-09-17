@@ -1,4 +1,5 @@
 export enum entityName {
     Payment = "payments",
-    User = "users"
+    User = "users",
+    Product = "products"
 }
