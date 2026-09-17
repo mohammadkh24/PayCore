@@ -1,3 +1,4 @@
+
 import {
   CanActivate,
   ExecutionContext,
@@ -6,13 +7,11 @@ import {
 } from '@nestjs/common';
 
 import { ConfigService } from '@nestjs/config';
-
 import { Request } from 'express';
-
 import * as jwt from 'jsonwebtoken';
 
 interface AccessTokenPayload {
-  sub: number;
+  sub: string;
   email: string;
   iat?: number;
   exp?: number;
@@ -26,57 +25,90 @@ type AuthenticatedRequest = Request & {
 export class AuthGuard implements CanActivate {
   private readonly jwtSecret: string;
 
-  constructor(private readonly configService: ConfigService) {
-    this.jwtSecret = this.configService.get<string>('jwt.accessTokenSecret')!;
+  constructor(
+    private readonly configService: ConfigService,
+  ) {
+    this.jwtSecret = this.configService.get<string>(
+      'jwt.accessTokenSecret',
+    )!;
   }
 
-  canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+  canActivate(
+    context: ExecutionContext,
+  ): boolean {
+    const request =
+      context
+        .switchToHttp()
+        .getRequest<AuthenticatedRequest>();
 
     const token = this.extractToken(request);
 
     if (!token) {
-      throw new UnauthorizedException('توکن خالی یا نامعتبر است');
+      throw new UnauthorizedException(
+        'توکن خالی یا نامعتبر است',
+      );
     }
 
     try {
-      const decoded = jwt.verify(token, this.jwtSecret);
+      const decoded = jwt.verify(
+        token,
+        this.jwtSecret,
+      );
 
-      if (typeof decoded !== 'object' || decoded === null) {
-        throw new UnauthorizedException('توکن نامعتبر است');
+      if (
+        typeof decoded !== 'object' ||
+        decoded === null
+      ) {
+        throw new UnauthorizedException(
+          'توکن نامعتبر است',
+        );
       }
 
       if (
-        typeof decoded.sub !== 'number' ||
+        typeof decoded.sub !== 'string' ||
         typeof decoded.email !== 'string'
       ) {
-        throw new UnauthorizedException('توکن ناقص یا نامعتبر است');
+        throw new UnauthorizedException(
+          'توکن ناقص یا نامعتبر است',
+        );
       }
 
-      const payload = decoded as unknown as AccessTokenPayload;
-      
+      const payload =
+        decoded as unknown as AccessTokenPayload;
+
       request.user = payload;
 
       return true;
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
+      if (
+        error instanceof UnauthorizedException
+      ) {
         throw error;
       }
 
-      throw new UnauthorizedException('توکن نامعتبر یا منقضی شده');
+      throw new UnauthorizedException(
+        'توکن نامعتبر یا منقضی شده',
+      );
     }
   }
 
-  private extractToken(request: Request): string | null {
-    const authHeader = request.headers.authorization;
+  private extractToken(
+    request: Request,
+  ): string | null {
+    const authHeader =
+      request.headers.authorization;
 
     if (!authHeader) {
       return null;
     }
 
-    const [bearer, token] = authHeader.split(' ');
+    const [bearer, token] =
+      authHeader.split(' ');
 
-    if (bearer?.toLowerCase() !== 'bearer' || !token) {
+    if (
+      bearer?.toLowerCase() !== 'bearer' ||
+      !token
+    ) {
       return null;
     }
 

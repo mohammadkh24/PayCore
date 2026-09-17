@@ -4,6 +4,7 @@ export enum configKeys {
   App = 'app',
   Db = 'db',
   Jwt = 'jwt',
+  ZarinPal = 'zarinpal',
 }
 
 export const appConfig = registerAs(configKeys.App, () => ({
@@ -22,5 +23,10 @@ export const JwtConfig = registerAs(configKeys.Jwt, () => ({
   accessTokenSecret: process.env.ACCESS_TOKEN_SECRET,
   refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET,
 }));
+export const zarinpalConfig = registerAs(configKeys.ZarinPal, () => ({
+  merchantId: process.env.ZARINPAL_MERCHANT_ID,
+  baseUrl: process.env.ZARINPAL_BASE_URL,
+  callbackUrl: process.env.ZARINPAL_CALLBACK_URL,
+}));
 
-export const configurations = [appConfig, dbConfig, JwtConfig];
+export const configurations = [appConfig, dbConfig, JwtConfig , zarinpalConfig];

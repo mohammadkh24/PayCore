@@ -3,14 +3,17 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { PaymentStatus } from '../enums/payment-status.enum';
+import { User } from 'src/modules/user/entities/user.entity';
 
 @Entity(entityName.Payment)
 export class Payment {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: number;
 
   @Column()
@@ -31,6 +34,10 @@ export class Payment {
 
   @Column({ nullable: true })
   description: string;
+
+  @ManyToOne(() => User, { nullable: false })
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
   @CreateDateColumn()
   createdAt: Date;

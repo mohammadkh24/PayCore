@@ -1,28 +1,35 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 import { JwtService } from '@nestjs/jwt';
-
 import * as bcrypt from 'bcrypt';
 
-import { UserService } from '../user/user.service';
-
-import { CreateUserDto } from '../user/dto/create-user.dto';
-
-import { LoginDto } from './dto/login.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from '../user/entities/user.entity';
 import { Repository } from 'typeorm';
+
+import { UserService } from '../user/user.service';
+import { CreateUserDto } from '../user/dto/create-user.dto';
+import { LoginDto } from './dto/login.dto';
+import { User } from '../user/entities/user.entity';
+
+import { AuthMessages } from 'src/common/enums/messages.enum';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
     private readonly jwtService: JwtService,
+
     private readonly userService: UserService,
   ) {}
 
-  async generateToken(user: { id: number; email: string }) {
+  async generateToken(
+    user: { id: string; email: string },
+  ) {
     const payload = {
       sub: user.id,
       email: user.email,
@@ -31,10 +38,16 @@ export class AuthService {
     return this.jwtService.signAsync(payload);
   }
 
-  async register(createUserDto: CreateUserDto) {
-    const user = await this.userService.create(createUserDto);
+  async register(
+    createUserDto: CreateUserDto,
+  ) {
+    const user =
+      await this.userService.create(
+        createUserDto,
+      );
 
-    const accessToken = await this.generateToken(user);
+    const accessToken =
+      await this.generateToken(user);
 
     return {
       user: {
@@ -46,25 +59,36 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto) {
-    const user = await this.userRepository.findOne({
-      where: { email: loginDto.email },
-    });
+  async login(
+    loginDto: LoginDto,
+  ) {
+    const user =
+      await this.userRepository.findOne({
+        where: {
+          email: loginDto.email,
+        },
+      });
 
     if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException(
+        AuthMessages.INVALID_CREDENTIALS,
+      );
     }
 
-    const passwordIsValid = await bcrypt.compare(
-      loginDto.password,
-      user.password,
-    );
+    const passwordIsValid =
+      await bcrypt.compare(
+        loginDto.password,
+        user.password,
+      );
 
     if (!passwordIsValid) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException(
+        AuthMessages.INVALID_CREDENTIALS,
+      );
     }
 
-    const accessToken = await this.generateToken(user);
+    const accessToken =
+      await this.generateToken(user);
 
     return {
       user: {

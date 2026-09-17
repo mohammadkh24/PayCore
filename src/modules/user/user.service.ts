@@ -9,6 +9,7 @@ export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {}
+
   async create(createUserDto: CreateUserDto) {
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
@@ -24,4 +25,5 @@ export class UserService {
     });
     return this.userRepository.save(user);
   }
+  
 }
