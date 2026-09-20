@@ -6,9 +6,11 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 
 import {
+  ApiBearerAuth,
   ApiOperation,
   ApiParam,
   ApiResponse,
@@ -18,6 +20,7 @@ import {
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { AuthGuard } from 'src/common/guards/auth.guard';
 
 @ApiTags('Products')
 @Controller('products')
@@ -27,6 +30,8 @@ export class ProductController {
   ) {}
 
   @Post()
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
   @ApiOperation({
     summary: 'Create a product',
   })
@@ -89,6 +94,8 @@ export class ProductController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
   @ApiOperation({
     summary: 'Update a product',
   })
@@ -121,6 +128,8 @@ export class ProductController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
   @ApiOperation({
     summary: 'Delete a product',
   })

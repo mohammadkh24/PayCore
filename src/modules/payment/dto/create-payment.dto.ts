@@ -1,20 +1,26 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsPositive, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsUUID,
+} from 'class-validator';
+
+import { PaymentMethod } from '../enums/payment-method';
 
 export class CreatePaymentDto {
   @ApiProperty({
-    example: 100000,
-    description: 'Payment amount in toman',
+    example:
+      '550e8400-e29b-41d4-a716-446655440000',
+    description: 'Order UUID',
   })
-  @IsInt()
-  @IsPositive()
-  amount: number;
+  @IsUUID()
+  orderId: string;
 
   @ApiProperty({
-    example: 'Test payment',
-    description: 'Payment description',
+    enum: PaymentMethod,
+    enumName: 'PaymentMethod',
+    example: PaymentMethod.WALLET,
+    description: 'Payment method',
   })
-  @IsString()
-  @IsNotEmpty()
-  description: string;
+  @IsEnum(PaymentMethod)
+  paymentMethod: PaymentMethod;
 }

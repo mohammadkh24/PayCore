@@ -15,16 +15,20 @@ async function bootstrap() {
   const port = configService.get('app.port');
 
   app.enableCors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    origin: 'http://localhost:5500',
+    methods: [
+      'GET',
+      'POST',
+      'PUT',
+      'PATCH',
+      'DELETE',
+      'OPTIONS',
+    ],
     allowedHeaders: [
       'Content-Type',
       'Authorization',
-      'Accept',
-      'Origin',
-      'X-Requested-With',
+      'Idempotency-Key',
     ],
-    credentials: true, // اگر کوکی می‌خوای بفرستی
   });
 
   app.useGlobalPipes(
@@ -44,7 +48,12 @@ async function bootstrap() {
     .setDescription('.........')
     .addBearerAuth()
     .setVersion('1.0.0')
-
+    .addTag("Auth")
+    .addTag("Users")
+    .addTag("Products")
+    .addTag("Orders")
+    .addTag("Payments")
+    
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

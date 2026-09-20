@@ -1,9 +1,7 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
 import axios from 'axios';
+
 import { ConfigService } from '@nestjs/config';
 
 import { ZarinPalMessages } from 'src/common/enums/messages.enum';
@@ -11,39 +9,51 @@ import { ZarinPalMessages } from 'src/common/enums/messages.enum';
 @Injectable()
 export class ZarinPalService {
   private readonly merchantId: string;
+
   private readonly baseUrl: string;
+
   private readonly callbackUrl: string;
 
-  constructor(
-    private readonly configService: ConfigService,
-  ) {
-    this.merchantId =
-      this.configService.get<string>(
-        'zarinpal.merchantId',
-      )!;
+  constructor(private readonly configService: ConfigService) {
+    this.merchantId = this.configService.get<string>('zarinpal.merchantId')!;
 
-    this.baseUrl =
-      this.configService.get<string>(
-        'zarinpal.baseUrl',
-      )!;
+    this.baseUrl = this.configService.get<string>('zarinpal.baseUrl')!;
 
-    this.callbackUrl =
-      this.configService.get<string>(
-        'zarinpal.callbackUrl',
-      )!;
+    this.callbackUrl = this.configService.get<string>('zarinpal.callbackUrl')!;
   }
+
+  /* =========================
+     PAYMENT URL
+  ========================= */
+
+  getPaymentUrl(authority: string) {
+    return `${this.baseUrl}/pg/StartPay/${authority}`;
+  }
+
+  /* =========================
+     REQUEST PAYMENT
+  ========================= */
 
   async requestPayment(
     amount: number,
     description: string,
+    callbackUrl = this.callbackUrl,
   ) {
+    // Internal amounts are stored in Toman.
+    // ZarinPal expects amounts in Rial.
+    const rialAmount = amount * 10;
+
     const response = await axios.post(
       `${this.baseUrl}/pg/v4/payment/request.json`,
       {
         merchant_id: this.merchantId,
-        amount,
+
+        amount: rialAmount,
+
         description,
-        callback_url: this.callbackUrl,
+
+        callback_url: callbackUrl,
+
         currency: 'IRR',
       },
     );
@@ -51,47 +61,48 @@ export class ZarinPalService {
     const data = response.data;
 
     if (data.data?.code !== 100) {
-      throw new InternalServerErrorException(
-        ZarinPalMessages.REQUEST_FAILED,
-      );
+      throw new InternalServerErrorException(ZarinPalMessages.REQUEST_FAILED);
     }
 
-    const authority =
-      data.data.authority;
+    const authority = data.data.authority;
 
     return {
       authority,
-      paymentUrl:
-        `${this.baseUrl}/pg/StartPay/${authority}`,
+
+      paymentUrl: this.getPaymentUrl(authority),
     };
   }
 
-  async verifyPayment(
-    amount: number,
-    authority: string,
-  ) {
+  /* =========================
+     VERIFY PAYMENT
+  ========================= */
+
+  async verifyPayment(amount: number, authority: string) {
     try {
+      // Internal amounts are stored in Toman.
+      // ZarinPal expects amounts in Rial.
+      const rialAmount = amount * 10;
+
       const response = await axios.post(
         `${this.baseUrl}/pg/v4/payment/verify.json`,
         {
           merchant_id: this.merchantId,
-          amount,
+
+          amount: rialAmount,
+
           authority,
         },
       );
 
       const data = response.data;
+
       const code = data.data?.code;
 
-      if (
-        code === 100 ||
-        code === 101
-      ) {
+      if (code === 100 || code === 101) {
         return {
           success: true,
-          referenceId: String(
-            data.data.ref_id,
-          ),
+
+          referenceId: String(data.data.ref_id),
         };
       }
 
@@ -100,10 +111,7 @@ export class ZarinPalService {
         referenceId: null,
       };
     } catch (error) {
-      console.error(
-        'ZarinPal Verify ERROR:',
-        error,
-      );
+      console.error('ZarinPal Verify ERROR:', error);
 
       return {
         success: false,

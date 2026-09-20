@@ -1,5 +1,6 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -7,9 +8,11 @@ import {
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserService } from './user.service';
+import { AuthGuard } from 'src/common/guards/auth.guard';
 
 @ApiTags('Users')
-@Controller('users')
+@ApiBearerAuth()
+@UseGuards(AuthGuard)@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
